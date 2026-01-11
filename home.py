@@ -2,6 +2,7 @@ import pandas as pd
 import numpy as np
 import plotly.express as px
 import streamlit as st
+import pydeck as pdk
 
 st.title("🚕 Divvy dataset Exploratory Data Analysis")
 st.markdown("______")
@@ -94,11 +95,27 @@ upper_dur = q3 + 1 * iqr
 # Apply interquantile to duration_min column
 df_divvy= df_divvy[(df_divvy["duration_min"]>= lower_dur) & (df_divvy["duration_min"]<= upper_dur)]
 
-####### Plotting
+#### plotting with Pydeck
+
+total_rides_per_start_station = df_divvy.groupby(["start_lat", "start_lng"])["ride_id"].count().reset_index()
+
 st.markdown("_____")
-st.subheader("My first plot")
-st.map(
-    data=df_divvy,
-    latitude="start_lat",
-    longitude="start_lng"
-)
+st.subheader("My first plot with OpenMapBox")
+
+ch_initial_view = pdk.ViewState(
+     latitude=41.85003,
+     longitude=-87.65005,
+     zoom = 9
+     )
+sp_layer = pdk.Layer(
+     'ScatterplotLayer',
+     data = total_rides_per_start_station[["start_lng", "start_lat"]],
+     get_position = ["start_lng", "start_lat"],
+     get_color="[200, 30, 0, 160]",
+     get_radius=50)
+st.pydeck_chart(pdk.Deck(
+     #map_style='mapbox://styles/mapbox/light-v9',
+     map_style="dark",
+     initial_view_state=ch_initial_view,
+     layers = [sp_layer]
+     ))
